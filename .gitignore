@@ -11,4 +11,4 @@ gh-pages
 *.profdata
 *.pyc
 .dep.mk
-fancontrol
+rfancontrol

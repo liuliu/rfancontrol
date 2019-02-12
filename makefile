@@ -1,7 +1,7 @@
 LDFLAGS := -lnvidia-ml $(LDFLAGS)
 CFLAGS := -O3 -Wall -I"/usr/local/cuda/include" $(CFLAGS)
 
-TARGETS = fancontrol
+TARGETS = rfancontrol
 
 TARGET_SRCS := $(patsubst %,%.cc,$(TARGETS))
 

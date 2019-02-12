@@ -3,6 +3,7 @@
 #include <nvml.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 #include <algorithm>
 
 static void write_int(const char* const path, const int val)
@@ -51,7 +52,7 @@ int main(const int argc, const char* argv[])
 	sigaction(SIGABRT, &act, 0);
 	sigaction(SIGHUP, &act, 0);
 	const pid_t pid = getpid();
-	write_int("/run/fancontrol.pid", (int)pid);
+	write_int("/var/run/rfancontrol.pid", (int)pid);
 	nvmlInit();
 	struct timespec req, rem;
 	printf("Override to Manual, pid %d\n", (int)pid);
