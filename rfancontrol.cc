@@ -69,7 +69,7 @@ int main(const int argc, const char* argv[])
 		unsigned int device_count = 0;
 		if (NVML_SUCCESS != nvmlDeviceGetCount(&device_count))
 			continue;
-		unsigned int max_temperature = 0;
+		unsigned int max_temperature = 30;
 		for (unsigned int i = 0; i < device_count; i++)
 		{
 			nvmlDevice_t device;
