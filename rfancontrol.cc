@@ -84,9 +84,9 @@ int main(const int argc, const char* argv[])
 		const int pwm4 = std::min(255, std::max(0, (int)(max_temperature * max_temperature / 3600.0 * 256))); // Quadratic curve such that 25% maps to 30C, 100% maps to 60C.
 		write_int("/sys/class/hwmon/hwmon0/pwm4", pwm4);
 		// Read pwm value for all the other fans, multiple by 2, to get the final speed of intakes.
+		const int pwm1 = read_int("/sys/class/hwmon/hwmon0/pwm1"); // Pump
 		const int pwm2 = read_int("/sys/class/hwmon/hwmon0/pwm2"); // CPU fan
-		const int pwm6 = read_int("/sys/class/hwmon/hwmon0/pwm6"); // Pump fan
-		const int pwm35 = std::min(255, std::max(0, (int)((pwm2 + pwm4 + pwm6) / 3.0 * 2 + 0.5)));
+		const int pwm35 = std::min(255, std::max(64, (int)((pwm1 + pwm2 + pwm4) / 3.0 * 2 + 0.5)));
 		write_int("/sys/class/hwmon/hwmon0/pwm3", pwm35);
 		write_int("/sys/class/hwmon/hwmon0/pwm5", pwm35);
 	} while (running);
