@@ -57,7 +57,6 @@ int main(const int argc, const char* argv[])
 	struct timespec req, rem;
 	printf("Override to Manual, pid %d\n", (int)pid);
 	// See https://github.com/torvalds/linux/blob/master/drivers/hwmon/it87.c
-	// The new auto_pwm is supported on sTRX40 Aorus Xtreme. Use that instead.
 	// First, read previous mode for GPU fans, and auto setup.
 	const int pwm1_enable = read_int("/sys/class/hwmon/hwmon1/pwm1_enable");
 	write_int("/sys/class/hwmon/hwmon1/pwm1_enable", 1);
@@ -82,7 +81,10 @@ int main(const int argc, const char* argv[])
 			if (temperature > max_temperature)
 				max_temperature = temperature;
 		}
-		const int pwm1 = std::min(255, std::max(0, (int)(max_temperature * max_temperature / 3600.0 * 256))); // Quadratic curve such that 25% maps to 30C, 100% maps to 60C.
+		// sTRX40 Aorus Xtreme (it87) has things to compete pwm1, pick the maximum ones.
+		// This logic will be problematic once the bug fixed (it should be a bug).
+		int pwm1 = read_int("/sys/class/hwmon/hwmon1/pwm1");
+		pwm1 = std::max(pwm1, std::min(255, std::max(0, (int)(max_temperature * max_temperature / 3600.0 * 256)))); // Quadratic curve such that 25% maps to 30C, 100% maps to 60C.
 		write_int("/sys/class/hwmon/hwmon1/pwm1", pwm1);
 	} while (running);
 	printf("Exiting, Reset to Automatic\n");
