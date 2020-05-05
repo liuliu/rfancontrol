@@ -56,14 +56,15 @@ int main(const int argc, const char* argv[])
 	nvmlInit();
 	struct timespec req, rem;
 	printf("Override to Manual, pid %d\n", (int)pid);
-	// First, enable manual mode for fan3, fan4, fan5 (intake, GPU fans, intake).
-	write_int("/sys/class/hwmon/hwmon0/pwm3_enable", 1);
-	write_int("/sys/class/hwmon/hwmon0/pwm4_enable", 1);
-	write_int("/sys/class/hwmon/hwmon0/pwm5_enable", 1);
+	// See https://github.com/torvalds/linux/blob/master/drivers/hwmon/it87.c
+	// The new auto_pwm is supported on sTRX40 Aorus Xtreme. Use that instead.
+	// First, read previous mode for GPU fans, and auto setup.
+	const int pwm1_enable = read_int("/sys/class/hwmon/hwmon1/pwm1_enable");
+	write_int("/sys/class/hwmon/hwmon1/pwm1_enable", 1);
 	do {
-		// Sleep 1 second.
-		req.tv_sec = 1;
-		req.tv_nsec = 0;
+		// Sleep 0.5 second.
+		req.tv_sec = 0;
+		req.tv_nsec = 500000000;
 		nanosleep(&req, &rem);
 		// Read GPU fan speed.
 		unsigned int device_count = 0;
@@ -81,19 +82,11 @@ int main(const int argc, const char* argv[])
 			if (temperature > max_temperature)
 				max_temperature = temperature;
 		}
-		const int pwm4 = std::min(255, std::max(0, (int)(max_temperature * max_temperature / 3600.0 * 256))); // Quadratic curve such that 25% maps to 30C, 100% maps to 60C.
-		write_int("/sys/class/hwmon/hwmon0/pwm4", pwm4);
-		// Read pwm value for all the other fans, multiple by 2, to get the final speed of intakes.
-		const int pwm1 = read_int("/sys/class/hwmon/hwmon0/pwm1"); // Pump
-		const int pwm2 = read_int("/sys/class/hwmon/hwmon0/pwm2"); // CPU fan
-		const int pwm35 = std::min(255, std::max(64, (int)((pwm1 + pwm2 + pwm4) / 3.0 * 2 + 0.5)));
-		write_int("/sys/class/hwmon/hwmon0/pwm3", pwm35);
-		write_int("/sys/class/hwmon/hwmon0/pwm5", pwm35);
+		const int pwm1 = std::min(255, std::max(0, (int)(max_temperature * max_temperature / 3600.0 * 256))); // Quadratic curve such that 25% maps to 30C, 100% maps to 60C.
+		write_int("/sys/class/hwmon/hwmon1/pwm1", pwm1);
 	} while (running);
 	printf("Exiting, Reset to Automatic\n");
-	write_int("/sys/class/hwmon/hwmon0/pwm3_enable", 5);
-	write_int("/sys/class/hwmon/hwmon0/pwm4_enable", 5);
-	write_int("/sys/class/hwmon/hwmon0/pwm5_enable", 5);
+	write_int("/sys/class/hwmon/hwmon1/pwm1_enable", pwm1_enable);
 	nvmlShutdown();
 	return 0;
 }
